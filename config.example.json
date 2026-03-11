@@ -1,0 +1,21 @@
+{
+  "api_token": "your_api_token_here",
+  "ttl": 1,
+  "proxied": false,
+  "enable_ipv4": true,
+  "enable_ipv6": false,
+  "records": [
+    {
+      "zone_id": "zone_id_for_example_com",
+      "name": "home.example.com"
+    },
+    {
+      "zone_id": "zone_id_for_example_com",
+      "name": "sub.example.com"
+    },
+    {
+      "zone_id": "zone_id_for_another_com",
+      "name": "home.another.com"
+    }
+  ]
+}
