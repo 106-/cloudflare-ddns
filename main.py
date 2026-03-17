@@ -29,6 +29,7 @@ IPV6_SERVICES = [
 class Record:
     zone_id: str
     name: str
+    cname_target: str | None = None
 
 
 @dataclass
@@ -71,7 +72,7 @@ def load_config() -> Config:
         if missing_keys:
             print(f"Error: records[{i}] is missing keys: {', '.join(missing_keys)}")
             sys.exit(1)
-        records.append(Record(zone_id=r["zone_id"], name=r["name"]))
+        records.append(Record(zone_id=r["zone_id"], name=r["name"], cname_target=r.get("cname_target")))
 
     return Config(
         api_token=data["api_token"],
@@ -123,6 +124,33 @@ def sync_record(cf: Cloudflare, config: Config, record: Record, record_type: str
         cf.dns.records.update(existing.id, **params)
 
 
+def sync_cname(cf: Cloudflare, config: Config, record: Record) -> None:
+    existing_list = cf.dns.records.list(
+        zone_id=record.zone_id,
+        type="CNAME",
+        name=record.name,
+    )
+    existing = existing_list.result[0] if existing_list.result else None
+
+    params = dict(
+        zone_id=record.zone_id,
+        name=record.name,
+        type="CNAME",
+        content=record.cname_target,
+        ttl=config.ttl,
+        proxied=config.proxied,
+    )
+
+    if existing is None:
+        cf.dns.records.create(**params)
+        print(f"  Created CNAME: {record.name} -> {record.cname_target}")
+    elif existing.content == record.cname_target:
+        print(f"  CNAME up to date: {record.name} -> {record.cname_target}")
+    else:
+        print(f"  Updating CNAME: {record.name}  {existing.content} -> {record.cname_target}")
+        cf.dns.records.update(existing.id, **params)
+
+
 def main() -> None:
     config = load_config()
     cf = Cloudflare(api_token=config.api_token)
@@ -138,10 +166,13 @@ def main() -> None:
     try:
         for record in config.records:
             print(f"[{record.name}]")
-            if ipv4:
-                sync_record(cf, config, record, "A", ipv4)
-            if ipv6:
-                sync_record(cf, config, record, "AAAA", ipv6)
+            if record.cname_target:
+                sync_cname(cf, config, record)
+            else:
+                if ipv4:
+                    sync_record(cf, config, record, "A", ipv4)
+                if ipv6:
+                    sync_record(cf, config, record, "AAAA", ipv6)
 
     except cloudflare.APIConnectionError as e:
         print(f"Error: Failed to connect to Cloudflare API: {e}")

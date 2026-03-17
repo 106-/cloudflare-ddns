@@ -16,6 +16,11 @@
     {
       "zone_id": "zone_id_for_another_com",
       "name": "home.another.com"
+    },
+    {
+      "zone_id": "zone_id_for_example_com",
+      "name": "alias.example.com",
+      "cname_target": "home.example.com"
     }
   ]
 }
