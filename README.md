@@ -1,6 +1,6 @@
 # cloudflare-ddns
 
-A DDNS script that syncs the current global IP to Cloudflare DNS A/AAAA records.
+A DDNS script that syncs the current global IP to Cloudflare DNS A/AAAA/CNAME records.
 
 ## Setup
 
@@ -21,7 +21,9 @@ uv run python main.py
   "enable_ipv6": false,
   "records": [
     { "zone_id": "Zone ID", "name": "home.example.com" },
-    { "zone_id": "Zone ID", "name": "sub.example.com" }
+    { "zone_id": "Zone ID", "name": "sub.example.com" },
+    { "zone_id": "zone_id_for_example_com", "name": "alias.example.com", "cname_target": "home.example.com"
+    }
   ]
 }
 ```
